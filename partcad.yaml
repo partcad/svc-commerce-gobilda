@@ -24,7 +24,7 @@ docs:
     ...
     ```
 
-import:
+dependencies:
   pub:
     onlyInRoot: true
     type: git
