@@ -209,17 +209,19 @@ elif __name__ == "quote":
     # predates 'skus' only sends the parts, one SKU per part.
     lines = request["cart"].get("skus")
     if lines is None:
-        lines = {}
+        lines = []
         for part_spec in parts.values():
             count_per_sku = part_spec["count_per_sku"]
-            lines[part_spec["name"]] = {
-                "vendor": part_spec.get("vendor", None),
-                "sku": part_spec.get("sku", None),
-                "count": (part_spec["count"] + count_per_sku - 1) // count_per_sku,
-            }
+            lines.append(
+                {
+                    "vendor": part_spec.get("vendor", None),
+                    "sku": part_spec.get("sku", None),
+                    "count": (part_spec["count"] + count_per_sku - 1) // count_per_sku,
+                }
+            )
 
     price = 0.0
-    for line in lines.values():
+    for line in lines:
         vendor = line.get("vendor", None)
         if vendor != "gobilda":
             sys.stderr.write("Unknown vendor: {}\n".format(vendor))
