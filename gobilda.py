@@ -203,21 +203,36 @@ elif __name__ == "quote":
     # TODO(clairbee): empty the shopping session???
     cart = api_get_cart()
 
+    # What to order, one line per SKU. PartCAD works the count out itself, so
+    # that a SKU that is a set of several parts (a REX shaft and its E-clip) is
+    # ordered once for all of them rather than once per part. A PartCAD that
+    # predates 'skus' only sends the parts, one SKU per part.
+    lines = request["cart"].get("skus")
+    if lines is None:
+        lines = []
+        for part_spec in parts.values():
+            count_per_sku = part_spec["count_per_sku"]
+            lines.append(
+                {
+                    "vendor": part_spec.get("vendor", None),
+                    "sku": part_spec.get("sku", None),
+                    "count": (part_spec["count"] + count_per_sku - 1) // count_per_sku,
+                }
+            )
+
     price = 0.0
-    for part_spec in parts.values():
-        vendor = part_spec.get("vendor", None)
+    for line in lines:
+        vendor = line.get("vendor", None)
         if vendor != "gobilda":
             sys.stderr.write("Unknown vendor: {}\n".format(vendor))
             continue
-        sku = part_spec.get("sku", None)
-        count_per_sku = part_spec["count_per_sku"]
-        count = part_spec["count"]
+        sku = line.get("sku", None)
+        item_count = line["count"]
 
         # FIXME(clairbee): find the product id
         found = api_search(sku)
         product_id = found["product_id"]
 
-        item_count = (count + count_per_sku - 1) // count_per_sku
         added = api_add_item(sku, product_id, item_count)
         price += added["price"]
         cart_id = added["cart_id"]

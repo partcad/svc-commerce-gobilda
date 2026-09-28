@@ -1,3 +1,4 @@
+partcad: ">=0.8.131"
 name: //pub/svc/commerce/gobilda
 desc: goBILDA online store.
 
